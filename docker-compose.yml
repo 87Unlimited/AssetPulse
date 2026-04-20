@@ -3,11 +3,11 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: portfolioiq-db
+    container_name: assetpulse-db
     environment:
-      POSTGRES_DB: portfolioiq
-      POSTGRES_USER: portfolioiq_user
-      POSTGRES_PASSWORD: portfolioiq_pass
+      POSTGRES_DB: assetpulse
+      POSTGRES_USER: assetpulse_user
+      POSTGRES_PASSWORD: assetpulse_pass
     ports:
       - "5432:5432"
     volumes:
@@ -16,9 +16,9 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: portfolioiq-pgadmin
+    container_name: assetpulse-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@portfolioiq.com
+      PGADMIN_DEFAULT_EMAIL: admin@assetpulse.com
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "5050:80"

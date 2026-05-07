@@ -1,11 +1,11 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/assetpulse
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:postgres}
+    username: ${DB_USERNAME:assetpulse_user}
+    password: ${DB_PASSWORD:assetpulse_pass}
   jpa:
     hibernate:
-      ddl-auto: update        # use 'create' for first run, change to 'validate' after
+      ddl-auto: update        # 'update' preserves data, change to 'validate' in production
     show-sql: false
     properties:
       hibernate:
@@ -18,7 +18,3 @@ app:
 
 server:
   port: 8080
-
-logging:
-  level:
-    org.springframework.security: DEBUG

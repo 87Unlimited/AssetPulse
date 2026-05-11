@@ -1,15 +1,12 @@
 package com.assetpulse.backend.market;
 
-import com.futu.openapi.FTAPI_Conn_Qot;
 import com.futu.openapi.pb.QotCommon;
 import com.futu.openapi.pb.QotGetSecuritySnapshot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -20,13 +17,7 @@ public class MarketDataService {
     private final FutuClientService futuClientService;
     private final FutuQuoteHandler quoteHandler;
 
-    // Stores pending price requests — keyed by serialNo
-    private final Map<Integer, CompletableFuture<Double>> pendingRequests
-            = new ConcurrentHashMap<>();
-
     public double getPrice(String symbol, int market) throws Exception {
-        FTAPI_Conn_Qot client = futuClientService.getQotClient();
-
         QotCommon.Security security = QotCommon.Security.newBuilder()
                 .setMarket(market)
                 .setCode(symbol)
@@ -41,10 +32,7 @@ public class MarketDataService {
                 .build();
 
         CompletableFuture<Double> future = new CompletableFuture<>();
-        int serialNo = client.getSecuritySnapshot(request);
-        pendingRequests.put(serialNo, future);
-
-        // Register the callback so FutuQuoteHandler can complete the future
+        int serialNo = futuClientService.getQotClient().getSecuritySnapshot(request);
         quoteHandler.registerPendingRequest(serialNo, future);
 
         log.info("Requested snapshot for {} serialNo: {}", symbol, serialNo);

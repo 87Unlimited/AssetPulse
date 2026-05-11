@@ -20,10 +20,16 @@ axiosClient.interceptors.request.use((config) => {
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    const status = error.response?.status;
+
+    // Only redirect to login for actual auth failures
+    // 401 = unauthenticated, 403 = forbidden
+    // Never redirect for 400 (bad request), 409 (conflict), 404 (not found)
+    if (status === 401 || status === 403) {
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
+
     return Promise.reject(error);
   }
 );

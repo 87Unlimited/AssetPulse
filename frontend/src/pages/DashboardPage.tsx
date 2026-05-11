@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getHoldings, createHolding, deleteHolding } from "../api/holdingsApi";
@@ -73,10 +74,16 @@ const SummaryCard = ({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   // Fetch holdings
   const {
@@ -99,11 +106,11 @@ const DashboardPage = () => {
     },
     onError: (error) => {
       if (axios.isAxiosError(error)) {
-        setServerError(
-          error.response?.status === 400
-            ? "This symbol already exists in your portfolio"
-            : "Something went wrong, please try again",
-        );
+        if (error.response?.status === 409) {
+          setServerError("This symbol already exists in your portfolio");
+        } else {
+          setServerError("Something went wrong, please try again");
+        }
       }
     },
   });
@@ -175,7 +182,7 @@ const DashboardPage = () => {
           <p className="text-gray-400 mt-1">Your Portfolio Overview</p>
         </div>
         <button
-          onClick={logout}
+          onClick={handleLogout}
           className="text-gray-400 hover:text-white text-sm transition"
         >
           Sign out

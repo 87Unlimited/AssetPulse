@@ -15,6 +15,9 @@ app:
   jwt:
     secret: ${JWT_SECRET:your-super-secret-key-that-is-at-least-256-bits-long-for-hmac}
     expiration-ms: 86400000   # 24 hours
+  futu:
+    host: ${FUTU_HOST:172.22.32.1}
+    port: ${FUTU_PORT:11111}
 
 server:
   port: 8080

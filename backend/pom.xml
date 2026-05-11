@@ -86,6 +86,13 @@
             <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- Futu OpenAPI Java SDK -->
+        <dependency>
+            <groupId>com.futunn.openapi</groupId>
+            <artifactId>futu-api</artifactId>
+            <version>9.6.5608</version>
+        </dependency>
 	</dependencies>
 
 	<build>

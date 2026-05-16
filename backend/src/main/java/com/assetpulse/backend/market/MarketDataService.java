@@ -40,4 +40,14 @@ public class MarketDataService {
         // Wait max 5 seconds for response
         return future.get(5, TimeUnit.SECONDS);
     }
+
+    public boolean isValidSymbol(String symbol, int market) {
+        try {
+            double price = getPrice(symbol, market);
+            return price > 0;
+        } catch (Exception e) {
+            log.warn("Symbol validation failed for {} — {}", symbol, e.getMessage());
+            return false;
+        }
+    }
 }

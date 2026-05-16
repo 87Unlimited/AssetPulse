@@ -17,6 +17,7 @@ public class HoldingResponse {
     private BigDecimal marketValue;
     private BigDecimal gainLoss;
     private BigDecimal gainLossPercent;
+    private Integer market;
     private Instant createdAt;
     private Instant updatedAt;
 }

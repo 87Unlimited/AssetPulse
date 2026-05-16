@@ -17,6 +17,8 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Holding {
+    @Column(nullable = false)
+    private Integer market;  // 1=HK, 11=US, 21=A-share
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

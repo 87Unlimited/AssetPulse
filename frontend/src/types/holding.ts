@@ -18,4 +18,5 @@ export interface HoldingRequest {
   quantity: number;
   averageCost: number;
   currentPrice: number;
+  market: number;
 }

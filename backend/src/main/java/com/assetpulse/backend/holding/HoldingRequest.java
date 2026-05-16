@@ -10,4 +10,5 @@ public class HoldingRequest {
     private BigDecimal quantity;
     private BigDecimal averageCost;
     private BigDecimal currentPrice;
+    private Integer market;
 }

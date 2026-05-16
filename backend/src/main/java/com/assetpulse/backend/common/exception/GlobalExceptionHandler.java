@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(
             IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                "error", ex.getMessage(),
+                "error", ex.getMessage(),   // ← this passes the full message
                 "status", 409,
                 "timestamp", Instant.now().toString()
         ));

@@ -79,6 +79,7 @@ const DashboardPage = () => {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [selectedMarket, setSelectedMarket] = useState(11);
 
   const handleLogout = () => {
     logout();
@@ -107,7 +108,11 @@ const DashboardPage = () => {
     onError: (error) => {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 409) {
-          setServerError("This symbol already exists in your portfolio");
+          // Show the actual error message from backend
+          setServerError(
+            error.response.data?.error ??
+              "This symbol already exists in your portfolio",
+          );
         } else {
           setServerError("Something went wrong, please try again");
         }
@@ -140,6 +145,7 @@ const DashboardPage = () => {
       quantity: parseFloat(data.quantity),
       averageCost: parseFloat(data.averageCost),
       currentPrice: parseFloat(data.currentPrice),
+      market: selectedMarket,
     };
     createMutation.mutate(payload);
   };
@@ -236,18 +242,27 @@ const DashboardPage = () => {
               className="grid grid-cols-1 sm:grid-cols-5 gap-3"
             >
               {[
-                { field: "symbol", placeholder: "AAPL" },
-                { field: "name", placeholder: "Apple Inc." },
-                { field: "quantity", placeholder: "Quantity" },
-                { field: "averageCost", placeholder: "Avg Cost" },
-                { field: "currentPrice", placeholder: "Current Price" },
-              ].map(({ field, placeholder }) => (
+                {
+                  field: "symbol",
+                  placeholder: "Symbol",
+                  hint: "US: AAPL · HK: 00700 · A-share: 600519",
+                },
+                { field: "name", placeholder: "Company Name", hint: "" },
+                { field: "quantity", placeholder: "Quantity", hint: "" },
+                { field: "averageCost", placeholder: "Avg Cost", hint: "" },
+                {
+                  field: "currentPrice",
+                  placeholder: "Current Price",
+                  hint: "",
+                },
+              ].map(({ field, placeholder, hint }) => (
                 <div key={field}>
                   <input
                     {...register(field as keyof HoldingForm)}
                     placeholder={placeholder}
                     className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
+                  {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
                   {errors[field as keyof HoldingForm] && (
                     <p className="mt-1 text-xs text-red-400">
                       {errors[field as keyof HoldingForm]?.message}
@@ -255,6 +270,17 @@ const DashboardPage = () => {
                   )}
                 </div>
               ))}
+              <div className="sm:col-span-5">
+                <select
+                  value={selectedMarket}
+                  onChange={(e) => setSelectedMarket(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value={11}>🇺🇸 US Market</option>
+                  <option value={1}>🇭🇰 HK Market</option>
+                  <option value={21}>🇨🇳 A-Share Market</option>
+                </select>
+              </div>
               <button
                 type="submit"
                 disabled={createMutation.isPending}

@@ -1,13 +1,13 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getHoldings, createHolding, deleteHolding } from "../api/holdingsApi";
 import type { HoldingRequest, HoldingResponse } from "../types/holding";
-import { useAuthStore } from "../store/authStore";
+import PortfolioCharts from "../components/PortfolioCharts";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import axios from "axios";
+import { useToastStore, type ToastState } from "../store/toastStore";
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 const holdingSchema = z.object({
@@ -74,17 +74,10 @@ const SummaryCard = ({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const DashboardPage = () => {
-  const navigate = useNavigate();
-  const logout = useAuthStore((state) => state.logout);
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [selectedMarket, setSelectedMarket] = useState(11);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   // Fetch holdings
   const {
@@ -97,6 +90,8 @@ const DashboardPage = () => {
   });
 
   // Create holding mutation
+  const showToast = useToastStore((state: ToastState) => state.show);
+
   const createMutation = useMutation({
     mutationFn: createHolding,
     onSuccess: () => {
@@ -104,6 +99,7 @@ const DashboardPage = () => {
       setShowForm(false);
       reset();
       setServerError(null);
+      showToast("Holding added successfully");
     },
     onError: (error) => {
       if (axios.isAxiosError(error)) {
@@ -125,6 +121,10 @@ const DashboardPage = () => {
     mutationFn: deleteHolding,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["holdings"] });
+      showToast("Holding removed");
+    },
+    onError: () => {
+      showToast("Failed to remove holding", "error");
     },
   });
 
@@ -180,23 +180,18 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-6 max-w-screen-xl mx-auto">
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-white">AssetPulse</h1>
-          <p className="text-gray-400 mt-1">Your Portfolio Overview</p>
+          <h1 className="text-xl font-semibold text-white">
+            Portfolio overview
+          </h1>
+          <p className="text-gray-400 text-sm mt-0.5">Last updated: just now</p>
         </div>
-        <button
-          onClick={handleLogout}
-          className="text-gray-400 hover:text-white text-sm transition"
-        >
-          Sign out
-        </button>
       </div>
-
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <SummaryCard
           label="Total Portfolio Value"
           value={formatCurrency(totalValue)}
@@ -212,6 +207,9 @@ const DashboardPage = () => {
           highlight={totalGainLossPercent >= 0 ? "green" : "red"}
         />
       </div>
+
+      {/* Charts */}
+      <PortfolioCharts holdings={holdings} />
 
       {/* Holdings Section */}
       <div className="bg-gray-900 rounded-2xl shadow-xl">
@@ -305,21 +303,20 @@ const DashboardPage = () => {
             <table className="w-full">
               <thead>
                 <tr className="text-left text-gray-400 text-sm border-b border-gray-800">
-                  {[
-                    "Symbol",
-                    "Name",
-                    "Quantity",
-                    "Avg Cost",
-                    "Current Price",
-                    "Market Value",
-                    "Gain / Loss",
-                    "Return",
-                    "",
-                  ].map((h) => (
-                    <th key={h} className="px-6 py-3 font-medium">
-                      {h}
-                    </th>
-                  ))}
+                  <th className="px-4 py-3 font-medium">Symbol</th>
+                  <th className="px-4 py-3 font-medium hidden md:table-cell">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 font-medium text-right">Qty</th>
+                  <th className="px-4 py-3 font-medium text-right hidden lg:table-cell">
+                    Avg Cost
+                  </th>
+                  <th className="px-4 py-3 font-medium text-right">Price</th>
+                  <th className="px-4 py-3 font-medium text-right">Value</th>
+                  <th className="px-4 py-3 font-medium text-right">
+                    Gain / Loss
+                  </th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -330,41 +327,44 @@ const DashboardPage = () => {
                       key={holding.id}
                       className="border-b border-gray-800 hover:bg-gray-800/50 transition"
                     >
-                      <td className="px-6 py-4 font-semibold text-white">
-                        {holding.symbol}
+                      <td className="px-4 py-4">
+                        <div className="font-semibold text-white">
+                          {holding.symbol}
+                        </div>
+                        <div className="text-gray-500 text-xs md:hidden">
+                          {holding.name}
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-300">
+                      <td className="px-4 py-4 text-gray-300 hidden md:table-cell">
                         {holding.name}
                       </td>
-                      <td className="px-6 py-4 text-gray-300">
+                      <td className="px-4 py-4 text-gray-300 text-right">
                         {holding.quantity}
                       </td>
-                      <td className="px-6 py-4 text-gray-300">
+                      <td className="px-4 py-4 text-gray-300 text-right hidden lg:table-cell">
                         {formatCurrency(holding.averageCost)}
                       </td>
-                      <td className="px-6 py-4 text-gray-300">
+                      <td className="px-4 py-4 text-gray-300 text-right">
                         {formatCurrency(holding.currentPrice)}
                       </td>
-                      <td className="px-6 py-4 text-white font-medium">
+                      <td className="px-4 py-4 text-white font-medium text-right">
                         {formatCurrency(holding.marketValue)}
                       </td>
                       <td
-                        className={`px-6 py-4 font-medium ${isGain ? "text-green-400" : "text-red-400"}`}
+                        className={`px-4 py-4 font-medium text-right ${isGain ? "text-green-400" : "text-red-400"}`}
                       >
-                        {formatCurrency(holding.gainLoss)}
+                        <div>{formatCurrency(holding.gainLoss)}</div>
+                        <div className="text-xs opacity-75">
+                          {formatPercent(holding.gainLossPercent)}
+                        </div>
                       </td>
-                      <td
-                        className={`px-6 py-4 font-medium ${isGain ? "text-green-400" : "text-red-400"}`}
-                      >
-                        {formatPercent(holding.gainLossPercent)}
-                      </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4 text-right">
                         <button
                           onClick={() => deleteMutation.mutate(holding.id)}
                           disabled={deleteMutation.isPending}
                           className="text-gray-500 hover:text-red-400 text-sm transition"
                         >
-                          Remove
+                          ✕
                         </button>
                       </td>
                     </tr>

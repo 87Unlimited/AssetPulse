@@ -26,5 +26,19 @@ services:
       - postgres
     restart: unless-stopped
 
+  backend:
+    build: ./backend
+    container_name: assetpulse-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/assetpulse
+      - SPRING_DATASOURCE_USERNAME=assetpulse_user
+      - SPRING_DATASOURCE_PASSWORD=assetpulse_pass
+      - JWT_SECRET=${JWT_SECRET}
+    restart: unless-stopped
+
 volumes:
   postgres_data:

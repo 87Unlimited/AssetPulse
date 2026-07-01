@@ -2,6 +2,7 @@ package com.assetpulse.backend.common.security;
 
 import com.assetpulse.backend.common.model.Role;
 import com.assetpulse.backend.common.model.User;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -87,5 +88,27 @@ class JwtAuthFilterTest {
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
         verify(chain).doFilter(request, response);
+    }
+
+    @Test
+    void expiredToken_returns401() throws Exception{
+        User user = buildUser("alice@example.com");
+        // 1. Create a mock request with "Bearer some-expired-token" header
+        JwtAuthFilter filter = new JwtAuthFilter(jwtService, userDetailsService);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer some-expired-token");
+        // 2. Create a mock response
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        // 3. Create a mock filter chain
+        FilterChain chain = mock(FilterChain.class);
+        // 4. Tell jwtService: when extractEmail() is called, throw ExpiredJwtException
+        when(jwtService.extractEmail(any()))
+                .thenThrow(new ExpiredJwtException(null, null, "expired"));
+        // 5. Run the filter
+        filter.doFilterInternal(request, response, chain);
+        // 6. Assert response status is 401
+        assertThat(response.getStatus()).isEqualTo(401);
+        // 7. Assert filterChain.doFilter() was NEVER called
+        verify(chain, never()).doFilter(request, response);
     }
 }

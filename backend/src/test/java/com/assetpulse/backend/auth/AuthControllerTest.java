@@ -1,5 +1,6 @@
 package com.assetpulse.backend.auth;
 
+import com.assetpulse.backend.common.exception.GlobalExceptionHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,11 +29,11 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new AuthController(authService)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new AuthController(authService)).setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
-    void register_validRequest_returns200WithToken() throws Exception {
+    void register_duplicateEmail_returns409WithError() throws Exception {
         RegisterRequest body = new RegisterRequest();
         body.setEmail("new@example.com");
         body.setPassword("password123");
@@ -49,10 +50,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void register_duplicateEmail_throwsUnhandledException() throws Exception {
-        // IllegalArgumentException is currently unhandled — no @ControllerAdvice maps it.
-        // In Spring 7, unhandled controller exceptions are rethrown by MockMvc.
-        // Adding @ControllerAdvice to return 409 Conflict would improve this.
+    void register_duplicateEmail_methodName_scenario_expectedOutcome() throws Exception {
         RegisterRequest body = new RegisterRequest();
         body.setEmail("taken@example.com");
         body.setPassword("password123");
@@ -61,10 +59,11 @@ class AuthControllerTest {
         when(authService.register(any(RegisterRequest.class)))
                 .thenThrow(new IllegalArgumentException("Email already registered"));
 
-        assertThatThrownBy(() -> mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/auth/register")
                         .contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body))))
-                .hasCauseInstanceOf(IllegalArgumentException.class);
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().is(409))
+                .andExpect(jsonPath("$.error").value("Email already registered"));
     }
 
     @Test
@@ -84,9 +83,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_badCredentials_throwsAuthenticationException() throws Exception {
-        // BadCredentialsException is unhandled here (no ExceptionTranslationFilter in
-        // standalone setup). In the real app it becomes 401 via ExceptionTranslationFilter.
+    void login_badCredentials_returns401WithError() throws Exception {
         LoginRequest body = new LoginRequest();
         body.setEmail("user@example.com");
         body.setPassword("wrong");
@@ -94,9 +91,10 @@ class AuthControllerTest {
         when(authService.login(any(LoginRequest.class)))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
-        assertThatThrownBy(() -> mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(body))))
-                .hasCauseInstanceOf(BadCredentialsException.class);
+                        .content(objectMapper.writeValueAsString(body)))
+                .andExpect(status().is(401))
+                .andExpect(jsonPath("$.error").value("Bad credentials"));
     }
 }

@@ -13,7 +13,7 @@ spring:
 
 app:
   jwt:
-    secret: ${JWT_SECRET}
+    secret: "a-safe-and-very-long-secret-key-specifically-for-junit-testing-123456"
     expiration-ms: 86400000   # 24 hours
   futu:
     host: ${FUTU_HOST:172.22.32.1}

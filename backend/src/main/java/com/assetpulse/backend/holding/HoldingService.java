@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -19,8 +20,8 @@ public class HoldingService {
     private final MarketDataService marketDataService;
 
     private User getCurrentUser() {
-        return (User) SecurityContextHolder.getContext()
-                .getAuthentication().getPrincipal();
+        return (User) Objects.requireNonNull(SecurityContextHolder.getContext()
+                .getAuthentication()).getPrincipal();
     }
 
     public List<HoldingResponse> getAllHoldings() {

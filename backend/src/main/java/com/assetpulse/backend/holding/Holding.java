@@ -43,6 +43,13 @@ public class Holding {
     @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal currentPrice; // manually set for now
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private HoldingSource source;
+
+    @Column
+    private Long futuPositionId;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 

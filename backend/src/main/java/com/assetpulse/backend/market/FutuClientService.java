@@ -17,11 +17,11 @@ public class FutuClientService {
     private final FutuConfig futuConfig;
     private final FutuConnectionHandler connectionHandler;
     private final FutuQuoteHandler quoteHandler;
+    private final FutuSdkInitializer sdkInitializer;
     private FTAPI_Conn_Qot qotClient;
 
     @PostConstruct
     public void init() {
-        FTAPI.init();
         qotClient = new FTAPI_Conn_Qot();
         qotClient.setClientInfo("AssetPulse", 1);
         qotClient.setConnSpi(connectionHandler);
